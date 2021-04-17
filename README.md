@@ -27,4 +27,4 @@
 |HEADER_KEY_NAME|プロキシしたリクエストのヘッダに設定するユーザIDのキー名|`X-USER-ID`|
 |PORT|このスタブ認証サーバのポート|`5000`|
 |PROXY_HOST|プロキシ先のホスト|`http://localhost:8080/`|
-|PROXY_BASE_URL|プロキシホスト|`/proxy`|
+|PROXY_BASE_URL|このスタブ認証サーバがプロキシするホストURL(?)|`/proxy`|
