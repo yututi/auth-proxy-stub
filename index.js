@@ -30,6 +30,12 @@ passport.deserializeUser(function (user, done) {
 });
 
 // Middleware config
+app.use(PROXY_BASE_URL, proxy(PROXY_HOST, {
+    proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
+        proxyReqOpts.headers[HEADER_KEY_NAME] = srcReq.user
+        return proxyReqOpts
+    }
+}))
 app.use(cookieParser())
 app.use(express.urlencoded())
 app.use(session({
@@ -39,12 +45,6 @@ app.use(session({
 }))
 app.use(passport.initialize())
 app.use(passport.session())
-app.use(PROXY_BASE_URL, proxy(PROXY_HOST, {
-    proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
-        proxyReqOpts.headers[HEADER_KEY_NAME] = srcReq.user
-        return proxyReqOpts
-    }
-}))
 
 // Route config
 app.get("/login", (req, res) => {
