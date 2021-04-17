@@ -3,34 +3,35 @@ const express = require('express')
 const app = express()
 const { resolve } = require("path")
 const cookieParser = require('cookie-parser')
-const bodyParser = require("body-parser")
 const session = require('express-session')
+require('dotenv').config()
 
 const passport = require('passport'),
     LocalStrategy = require('passport-local').Strategy
 
-const PORT = 5000
+// Env variables
+const PROXY_HOST = env.PROXY_HOST || "http://localhost:8080/"
+const HEADER_KEY_NAME = env.HEADER_KEY_NAME || "X-USER-ID"
+const PROXY_BASE_URL = env.PROXY_BASE_URL || "/proxy"
+const PORT = env.PORT || 5000
 
+// Passport config
 passport.use(new LocalStrategy({
     usernameField: "userId",
-    passwordField: "pwd"
+    passwordField: "userId" // ignore password.
 }, (username, _, done) => {
-    console.log(`username: ${username}`)
     return done(null, username)
 }))
 passport.serializeUser(function (user, done) {
-    console.log("serialize", user)
     done(null, user);
 });
 passport.deserializeUser(function (user, done) {
-    console.log("deserialize", user)
     done(null, user);
 });
 
+// Middleware config
 app.use(cookieParser())
-app.use(bodyParser.urlencoded({
-    extended: false
-}))
+app.use(express.urlencoded())
 app.use(session({
     secret: 'abc',
     resave: false,
@@ -38,13 +39,14 @@ app.use(session({
 }))
 app.use(passport.initialize())
 app.use(passport.session())
-app.use('/proxy', proxy('https://www.npmjs.com/', {
+app.use(PROXY_BASE_URL, proxy(PROXY_HOST, {
     proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
-        proxyReqOpts.headers["X-USER-ID"] = srcReq.user
+        proxyReqOpts.headers[HEADER_KEY_NAME] = srcReq.user
         return proxyReqOpts
     }
 }))
 
+// Route config
 app.get("/login", (req, res) => {
     res.sendFile(resolve(__dirname, "templates/login.html"))
 })
@@ -53,7 +55,7 @@ app.post(
     "/login",
     passport.authenticate('local'),
     (req, res) => {
-        let redirectTo = "/proxy"
+        let redirectTo = PROXY_BASE_URL
         const {
             redirect_url
         } = req.query
@@ -64,6 +66,7 @@ app.post(
     }
 )
 
+//
 app.listen(PORT, () => {
     console.log(`started at http://localhost:${PORT}`)
 })
